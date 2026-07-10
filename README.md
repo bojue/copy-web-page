@@ -1,6 +1,6 @@
 # Web Page Cloner
 
-![Web](./public/web.png)
+![Web](./public/demo.png)
 
 一个网页资源克隆工具，能够完整提取目标网页的静态资源并重构为可独立部署的静态站点。
 

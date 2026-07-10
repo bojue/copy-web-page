@@ -129,7 +129,7 @@ export default function Home() {
   }, [lastOptions, handleClone]);
 
   return (
-    <div className="bg-[#fafafa] text-[#16191f] min-h-screen flex flex-col">
+    <div className="bg-[#ffffff] text-[#16191f] min-h-screen flex flex-col">
       {/* 顶部导航栏 */}
       <header className="w-full bg-white border-b border-slate-200 py-4 px-6 md:px-12 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -160,7 +160,7 @@ export default function Home() {
           {/* 左侧：介绍区域 */}
           <div className="lg:col-span-5 flex flex-col lg:pt-4">
             <h2 className="text-3xl font-bold tracking-tight text-slate-900 leading-tight">
-              完整克隆网页资源
+              克隆网页资源
             </h2>
             <p className="text-slate-600 text-sm leading-relaxed mt-3 max-w-sm">
               提取目标网页的完整资源包，包括样式表、脚本、字体及媒体文件，重构为可部署的静态资源。

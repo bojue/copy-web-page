@@ -1,5 +1,8 @@
 # Copy Web Page
 
+
+![Web](./public/web.png)
+
 ## Getting Started
 
 First, run the development server:

@@ -11,13 +11,13 @@ export default function Checkbox({ checked, onChange, label, className = "" }: C
   return (
     <div
       onClick={() => onChange(!checked)}
-      className={`flex items-center h-[50px] px-4 bg-gray-800/50 border border-gray-700/50 rounded-xl hover:bg-gray-800 transition-all cursor-pointer select-none ${className}`}
+      className={`flex items-center h-[42px] px-4 bg-gray-800/40 border border-gray-700/40 rounded-xl hover:bg-gray-800/60 transition-all cursor-pointer select-none ${className}`}
     >
       <div
-        className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 ${
+        className={`w-4.5 h-4.5 rounded-md border-2 flex items-center justify-center transition-all duration-200 ${
           checked
             ? "bg-indigo-600 border-indigo-600"
-            : "bg-gray-700 border-gray-600"
+            : "bg-gray-700/50 border-gray-600"
         }`}
       >
         {checked && (
@@ -26,7 +26,7 @@ export default function Checkbox({ checked, onChange, label, className = "" }: C
           </svg>
         )}
       </div>
-      <span className="ml-3 text-sm font-medium text-gray-300">
+      <span className="ml-3 text-sm text-gray-300">
         {label}
       </span>
     </div>

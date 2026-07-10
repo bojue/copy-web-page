@@ -13,9 +13,9 @@ interface ButtonProps {
 }
 
 const variantStyles = {
-  primary: "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30",
-  secondary: "bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 text-gray-300 hover:text-white",
-  danger: "bg-red-800/30 hover:bg-red-800/50 border border-red-700/50 text-red-300",
+  primary: "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 text-white",
+  secondary: "bg-gray-800/40 hover:bg-gray-700/50 border border-gray-700/40 text-gray-300 hover:text-white",
+  danger: "bg-red-800/20 hover:bg-red-800/40 border border-red-700/40 text-red-300",
 };
 
 export default function Button({
@@ -33,13 +33,13 @@ export default function Button({
       onClick={onClick}
       disabled={disabled || loading}
       className={`
-        w-full py-4 px-6
+        w-full py-3.5 px-6
         ${variantStyles[variant]}
         disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-500 disabled:shadow-none
-        text-white font-semibold rounded-xl
+        font-medium rounded-xl text-sm
         transition-all duration-200 cursor-pointer
         disabled:cursor-not-allowed
-        hover:scale-[1.02] active:scale-[0.98]
+        hover:scale-[1.01] active:scale-[0.99]
         disabled:hover:scale-100
         ${className}
       `}

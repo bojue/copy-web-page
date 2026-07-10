@@ -1080,7 +1080,7 @@ export async function renderPage(
         allElements.forEach((el) => {
           // 检测是否有框架特征属性
           // 注意：SVG 元素的 className 是 SVGAnimatedString，不是字符串
-          const cls = typeof el.className === 'string' ? el.className : (el.className?.baseVal || '');
+          const cls = el instanceof SVGElement ? (el.className.baseVal || '') : el.className;
           if (el.hasAttribute('data-reactroot') ||
               el.hasAttribute('data-v-') ||
               el.hasAttribute('ng-version') ||

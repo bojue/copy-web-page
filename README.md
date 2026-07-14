@@ -16,6 +16,7 @@
 
 ## 效果
 <img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/423c32bc-5ea8-42ce-8f5a-f6a27523b9e3" />
+<img width="2560" height="1440" alt="截屏2026-07-14 17 31 22" src="https://github.com/user-attachments/assets/8a4a964b-a627-49dd-ad42-3a1c60ef089e" />
 
 ## 快速开始
 

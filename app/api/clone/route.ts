@@ -5,6 +5,7 @@ import { wrapError } from "@/lib/errors";
 import { globalCloneQueue } from "@/lib/job-queue";
 import { nanoid } from "nanoid";
 import { apiRateLimiter } from "@/lib/rate-limiter-api";
+import { cloneCache } from "@/lib/clone-cache";
 
 export const maxDuration = 120;
 
@@ -144,6 +145,41 @@ export async function POST(request: Request) {
 
   const options = validation.options!;
 
+  // 检查缓存：如果相同 URL 已克隆过且 zip 仍存在，直接返回结果
+  const cached = cloneCache.get(options.url, options.depth, options.includeJs);
+  if (cached) {
+    // 缓存命中，释放并发槽位
+    apiRateLimiter.release(clientIp);
+
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ type: "started", jobId: cached.jobId })}\n\n`)
+        );
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({
+            type: "complete",
+            jobId: cached.jobId,
+            pages: cached.pages,
+            assets: cached.assets,
+            totalSize: cached.totalSize,
+          })}\n\n`)
+        );
+        controller.close();
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-transform",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+      },
+    });
+  }
+
   // 生成任务ID（用于队列跟踪）
   const taskId = nanoid();
 
@@ -223,6 +259,14 @@ export async function POST(request: Request) {
             }
           },
           createdAt: Date.now(),
+        });
+
+        // 缓存克隆结果
+        cloneCache.set(options.url, options.depth, options.includeJs, {
+          jobId: result.jobId,
+          pages: result.pages,
+          assets: result.assets,
+          totalSize: result.totalSize,
         });
 
         send({

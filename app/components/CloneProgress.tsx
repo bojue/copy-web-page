@@ -9,6 +9,7 @@ interface CloneProgressProps {
   result: { pages: number; assets: number; totalSize: number } | null;
   error: string | null;
   isLoading?: boolean;
+  queueInfo?: { position: number; active: number; waiting: number; estimatedWaitSeconds: number; message: string } | null;
   onCancel?: () => void;
   onRetry?: () => void;
 }
@@ -39,9 +40,60 @@ export default function CloneProgressDisplay({
   result,
   error,
   isLoading,
+  queueInfo,
   onCancel,
   onRetry,
 }: CloneProgressProps) {
+  // 优先显示排队信息
+  if (queueInfo) {
+    const minutes = Math.ceil(queueInfo.estimatedWaitSeconds / 60);
+
+    return (
+      <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded">
+        <div className="flex items-start gap-2.5">
+          <div className="text-blue-600 mt-0.5">
+            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+            </svg>
+          </div>
+          <div className="flex-1">
+            <p className="text-xs font-bold text-blue-800">任务已进入队列</p>
+            <p className="text-[11px] text-slate-600 mt-1">
+              当前有 <span className="font-semibold text-blue-900">{queueInfo.active}</span> 个任务正在执行，
+              您排在第 <span className="font-semibold text-blue-900">{queueInfo.position}</span> 位
+              {queueInfo.estimatedWaitSeconds > 0 && (
+                <>，预计等待 <span className="font-semibold text-blue-900">{minutes}</span> 分钟</>
+              )}
+            </p>
+          </div>
+        </div>
+
+        {/* 排队进度条 */}
+        <div className="mt-3">
+          <div className="w-full h-2 bg-blue-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-blue-500 rounded-full transition-all duration-1000"
+              style={{ width: `${Math.max(10, ((queueInfo.active / (queueInfo.active + queueInfo.waiting)) * 100))}%` }}
+            />
+          </div>
+          <p className="text-[10px] text-slate-500 mt-1 text-center">
+            {queueInfo.active} / {queueInfo.active + queueInfo.waiting} 任务队列
+          </p>
+        </div>
+
+        {onCancel && (
+          <button
+            onClick={onCancel}
+            className="mt-3 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-[11px] font-bold rounded text-slate-700 transition-colors"
+          >
+            取消任务
+          </button>
+        )}
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded flex flex-col gap-3">

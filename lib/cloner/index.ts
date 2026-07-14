@@ -11,6 +11,7 @@ import { RateLimiter } from "./rate-limiter";
 import { ProgressManager } from "./progress-manager";
 import { FileManager } from "./file-manager";
 import { HtmlProcessor } from "./html-processor";
+import { Browser } from "puppeteer";
 import * as fs from "fs";
 
 export class CloneEngine {
@@ -53,11 +54,19 @@ export class CloneEngine {
       }
     });
 
+    // 为多页爬取时获取一个独占的浏览器实例
+    let taskBrowser: Browser | null = null;
+
     try {
       // Phase 1: Render pages (多页爬取时复用浏览器实例)
       const urlsToVisit: Array<{ url: string; currentDepth: number }> = [
         { url, currentDepth: 1 },
       ];
+
+      // 多页模式下提前获取浏览器，整个任务复用
+      if (isMultiPage) {
+        taskBrowser = await browserPool.acquire();
+      }
 
       while (urlsToVisit.length > 0) {
         const current = urlsToVisit.shift()!;
@@ -76,7 +85,8 @@ export class CloneEngine {
 
         const result: RenderResult = await renderPage(current.url, {
           includeJs,
-          reuseBrowser: isMultiPage // 多页时复用浏览器（自动保持 cookie/session）
+          reuseBrowser: isMultiPage,
+          browser: taskBrowser || undefined, // 多页时传入共享浏览器
         });
 
         // Store page HTML in memory（不写磁盘）
@@ -230,9 +240,10 @@ export class CloneEngine {
         totalSize = stats.size;
       } catch {}
 
-      // 关闭浏览器池（如果使用了）
-      if (isMultiPage) {
-        await browserPool.closeBrowser();
+      // 关闭任务级浏览器（如果使用了）
+      if (taskBrowser) {
+        await browserPool.release(taskBrowser);
+        taskBrowser = null;
       }
 
       this.progressManager.emitComplete();
@@ -245,9 +256,10 @@ export class CloneEngine {
         zipPath: this.fileManager.getZipPath(),
       };
     } catch (error) {
-      // 出错时也要关闭浏览器
-      if (depth > 1) {
-        await browserPool.closeBrowser().catch(() => {});
+      // 出错时也要释放浏览器
+      if (taskBrowser) {
+        await browserPool.release(taskBrowser).catch(() => {});
+        taskBrowser = null;
       }
       const message = error instanceof Error ? error.message : "Unknown error";
       this.progressManager.emitError(message);

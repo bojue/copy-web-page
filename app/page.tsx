@@ -11,6 +11,7 @@ export default function Home() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [result, setResult] = useState<{ pages: number; assets: number; totalSize: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [queueInfo, setQueueInfo] = useState<{ position: number; active: number; waiting: number; estimatedWaitSeconds: number; message: string } | null>(null);
   const [lastOptions, setLastOptions] = useState<{ url: string; depth: number; includeJs: boolean; rateLimit?: Partial<RateLimitOptions> } | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -21,6 +22,7 @@ export default function Home() {
       setJobId(null);
       setResult(null);
       setError(null);
+      setQueueInfo(null);
       setLastOptions(options);
 
       // 创建 AbortController 用于取消
@@ -73,10 +75,21 @@ export default function Home() {
               const data = JSON.parse(line.slice(6));
 
               switch (data.type) {
+                case "queued":
+                  setQueueInfo({
+                    position: data.position,
+                    active: data.active,
+                    waiting: data.waiting,
+                    estimatedWaitSeconds: data.estimatedWaitSeconds,
+                    message: data.message
+                  });
+                  break;
                 case "started":
+                  setQueueInfo(null);
                   setJobId(data.jobId);
                   break;
                 case "progress":
+                  setQueueInfo(null);
                   setProgress({
                     stage: data.stage,
                     message: data.message,
@@ -214,6 +227,7 @@ export default function Home() {
               result={result}
               error={error}
               isLoading={isLoading}
+              queueInfo={queueInfo}
               onCancel={handleCancel}
               onRetry={handleRetry}
             />

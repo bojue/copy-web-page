@@ -117,36 +117,17 @@ async function setupFetchInterception(page: Page): Promise<{
 
 export async function renderPage(
   url: string,
-  options: { includeJs: boolean; reuseBrowser?: boolean }
+  options: { includeJs: boolean; reuseBrowser?: boolean; browser?: Browser }
 ): Promise<RenderResult> {
-  let browser: Browser | null = null;
-  let shouldCloseBrowser = true;
+  let browser: Browser | null = options.browser || null;
+  let shouldCloseBrowser = false; // 调用方管理浏览器生命周期
   let page: Page | null = null;
 
   try {
-    // 使用浏览器池复用实例（多页爬取时提升性能）
-    if (options.reuseBrowser) {
-      browser = await browserPool.getBrowser();
-      shouldCloseBrowser = false;
-    } else {
-      // 使用原生 puppeteer（我们在页面注入反检测脚本，不依赖 stealth 插件）
-      browser = await puppeteer.launch({
-        headless: true,
-        args: [
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--disable-web-security",
-          "--disable-features=IsolateOrigins,site-per-process",
-          "--allow-running-insecure-content",
-          "--disable-blink-features=AutomationControlled",
-          // 添加更多反检测参数
-          "--disable-dev-shm-usage",
-          "--disable-accelerated-2d-canvas",
-          "--no-first-run",
-          "--no-zygote",
-          "--disable-gpu",
-        ],
-      });
+    // 如果调用方没有传入浏览器实例，通过池获取一个
+    if (!browser) {
+      browser = await browserPool.acquire();
+      shouldCloseBrowser = true; // 本函数负责释放
     }
 
     page = await browser.newPage();
@@ -1272,13 +1253,13 @@ export async function renderPage(
       pageTypeDetection: pageType,
     };
   } finally {
-    // 关闭页面（防止内存泄漏，尤其是多页复用时）
+    // 关闭页面（防止内存泄漏）
     if (page && !page.isClosed()) {
       await page.close().catch(() => {});
     }
-    // 只在非复用模式下关闭浏览器
+    // 只在本函数负责管理浏览器时释放
     if (browser && shouldCloseBrowser) {
-      await browser.close();
+      await browserPool.release(browser);
     }
   }
 }

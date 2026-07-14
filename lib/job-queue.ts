@@ -1,10 +1,10 @@
 /**
- * 并发任务队列
+ * 并发任务队列（事件驱动，无竞态条件）
  *
- * 商业化关键功能：防止多用户同时克隆导致服务器资源耗尽
- * - 限制同时执行的克隆任务数量
- * - 超出并发限制的任务自动排队等待
- * - 提供队列状态查询（位置、预计等待时间）
+ * 核心改动（相比轮询版本）：
+ * - 用 Promise + 回调队列替代 setInterval 轮询
+ * - 任务完成时精确唤醒队首等待者（FIFO），不存在多个 job 同时抢槽位的竞态
+ * - 保证 activeJobs.size 严格 <= maxConcurrency
  */
 
 export interface Job<T> {
@@ -24,7 +24,11 @@ export interface QueueStatus {
 export class JobQueue<T = any> {
   private maxConcurrency: number;
   private activeJobs = new Map<string, Promise<T>>();
-  private waitingJobs: Job<T>[] = [];
+  private waitingJobs: Array<{
+    job: Job<T>;
+    resolve: (value: T) => void;
+    reject: (reason: any) => void;
+  }> = [];
   private completedCount = 0;
   private averageJobDuration = 30000; // 默认30秒
 
@@ -42,22 +46,12 @@ export class JobQueue<T = any> {
       return this.executeJob(job);
     }
 
-    // 否则加入等待队列（按优先级排序）
-    this.waitingJobs.push(job);
-    this.waitingJobs.sort((a, b) => (b.priority || 0) - (a.priority || 0));
-
-    // 等待直到有空闲槽位
+    // 否则加入等待队列，返回一个 Promise
+    // 该 Promise 会在有槽位释放且轮到该任务时被 resolve
     return new Promise<T>((resolve, reject) => {
-      const checkInterval = setInterval(() => {
-        if (this.activeJobs.size < this.maxConcurrency) {
-          clearInterval(checkInterval);
-          const index = this.waitingJobs.findIndex((j) => j.id === job.id);
-          if (index !== -1) {
-            this.waitingJobs.splice(index, 1);
-            this.executeJob(job).then(resolve).catch(reject);
-          }
-        }
-      }, 500); // 每500ms检查一次
+      this.waitingJobs.push({ job, resolve, reject });
+      // 按优先级排序（高优先级在前）
+      this.waitingJobs.sort((a, b) => (b.job.priority || 0) - (a.job.priority || 0));
     });
   }
 
@@ -82,7 +76,22 @@ export class JobQueue<T = any> {
       return result;
     } finally {
       this.activeJobs.delete(job.id);
+      // 任务完成后，尝试调度下一个等待中的任务
+      this.scheduleNext();
     }
+  }
+
+  /**
+   * 调度等待队列中的下一个任务（事件驱动，无竞态）
+   */
+  private scheduleNext(): void {
+    if (this.waitingJobs.length === 0) return;
+    if (this.activeJobs.size >= this.maxConcurrency) return;
+
+    // 取出队首任务
+    const next = this.waitingJobs.shift()!;
+    // 异步执行，并将结果传回等待者的 Promise
+    this.executeJob(next.job).then(next.resolve).catch(next.reject);
   }
 
   /**
@@ -95,7 +104,7 @@ export class JobQueue<T = any> {
     };
 
     if (jobId) {
-      const position = this.waitingJobs.findIndex((j) => j.id === jobId);
+      const position = this.waitingJobs.findIndex((w) => w.job.id === jobId);
       if (position !== -1) {
         status.position = position + 1;
         // 估算等待时间：需要等待前面的任务 + 当前活跃任务完成
@@ -111,9 +120,10 @@ export class JobQueue<T = any> {
    * 取消排队中的任务
    */
   cancel(jobId: string): boolean {
-    const index = this.waitingJobs.findIndex((j) => j.id === jobId);
+    const index = this.waitingJobs.findIndex((w) => w.job.id === jobId);
     if (index !== -1) {
-      this.waitingJobs.splice(index, 1);
+      const removed = this.waitingJobs.splice(index, 1)[0];
+      removed.reject(new Error("任务已取消"));
       return true;
     }
     return false;
@@ -133,5 +143,5 @@ export class JobQueue<T = any> {
   }
 }
 
-// 全局单例队列（支持多用户并发克隆）
-export const globalCloneQueue = new JobQueue(3);
+// 全局单例队列（支持多用户并发克隆，最多5个任务同时执行）
+export const globalCloneQueue = new JobQueue(5);

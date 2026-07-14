@@ -8,29 +8,6 @@ import { apiRateLimiter } from "@/lib/rate-limiter-api";
 
 export const maxDuration = 120;
 
-/**
- * 任务指纹缓存（用于防止5分钟内重复提交相同任务）
- */
-const recentTasks = new Map<string, { jobId: string; timestamp: number }>();
-
-/**
- * 定期清理过期的任务指纹（每5分钟）
- */
-setInterval(() => {
-  const now = Date.now();
-  for (const [fingerprint, task] of recentTasks.entries()) {
-    if (now - task.timestamp > 5 * 60 * 1000) {
-      recentTasks.delete(fingerprint);
-    }
-  }
-}, 5 * 60 * 1000);
-
-/**
- * 生成任务指纹（基于URL+depth+includeJs）
- */
-function getTaskFingerprint(options: CloneOptions): string {
-  return `${options.url}-${options.depth}-${options.includeJs}`;
-}
 
 /**
  * 获取客户端真实 IP
@@ -167,29 +144,8 @@ export async function POST(request: Request) {
 
   const options = validation.options!;
 
-  // 检查任务指纹，防止重复提交
-  const fingerprint = getTaskFingerprint(options);
-  const existing = recentTasks.get(fingerprint);
-
-  if (existing && Date.now() - existing.timestamp < 5 * 60 * 1000) {
-    // 释放占用的并发槽位
-    apiRateLimiter.release(clientIp);
-
-    return Response.json(
-      {
-        error: "任务重复",
-        message: "该任务正在执行中或最近已完成，请勿重复提交",
-        jobId: existing.jobId,
-      },
-      { status: 409 }
-    );
-  }
-
   // 生成任务ID（用于队列跟踪）
   const taskId = nanoid();
-
-  // 记录任务指纹
-  recentTasks.set(fingerprint, { jobId: taskId, timestamp: Date.now() });
 
   // Create SSE stream with heartbeat
   const encoder = new TextEncoder();

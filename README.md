@@ -1,4 +1,3 @@
-# Web Page Cloner
 
 ![Web](./public/demo.png)
 
@@ -14,6 +13,9 @@
 - **多级深度爬取** - 支持跟踪站内链接，批量克隆多个页面
 - **实时进度反馈** - 基于 SSE 的实时进度推送
 - **ZIP 打包下载** - 一键打包，可直接部署
+
+## 效果
+<img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/423c32bc-5ea8-42ce-8f5a-f6a27523b9e3" />
 
 ## 快速开始
 

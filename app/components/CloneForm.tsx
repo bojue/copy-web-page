@@ -22,7 +22,7 @@ const PRESET_LABELS: Record<PresetKey, string> = {
 };
 
 export default function CloneForm({ onSubmit, isLoading }: CloneFormProps) {
-  const [url, setUrl] = useState("https://mintlify.com");
+  const [url, setUrl] = useState("https://ui.shadcn.com/");
   const [depth, setDepth] = useState(1);
   const [includeJs, setIncludeJs] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);

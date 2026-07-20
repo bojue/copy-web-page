@@ -1,9 +1,12 @@
 
-![Web](./public/demo.png)
+# Web Page Cloner
 
 一个网页资源克隆工具，能够完整提取目标网页的静态资源并重构为可独立部署的静态站点。
 
-![Demo](./public/录屏.gif)
+
+![Web](./public/demo.png)
+
+
 
 
 ## 产品特点
@@ -39,6 +42,55 @@ npm run dev
 ```bash
 npm run build
 npm run start
+```
+
+## PM2 部署（推荐）
+
+使用 PM2 进行生产环境部署，支持自动清理 Puppeteer 临时目录：
+
+```bash
+# 安装 PM2
+npm install -g pm2
+
+# 启动应用
+pm2 start ecosystem.config.js
+
+# 查看状态
+pm2 status
+
+# 查看日志
+pm2 logs
+
+# 设置开机自启
+pm2 startup
+pm2 save
+```
+
+**PM2 配置说明**：
+- 主应用每天凌晨 2 点自动重启（触发清理）
+- 独立清理任务每 6 小时执行一次
+- 自动清理 1 天前的 Puppeteer 临时目录
+
+详细说明见 [Puppeteer 临时目录清理方案](./docs/puppeteer-cleanup.md)
+
+## 维护与监控
+
+### 手动清理临时目录
+
+```bash
+npm run cleanup
+```
+
+### 查看清理日志
+
+```bash
+tail -f /tmp/puppeteer-cleanup.log
+```
+
+### 检查临时目录数量
+
+```bash
+ls -ld /tmp/puppeteer_dev_chrome_profile-* 2>/dev/null | wc -l
 ```
 
 ## 开源协议

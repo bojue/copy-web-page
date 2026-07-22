@@ -14,8 +14,6 @@ export default function Templates() {
 
   return (
     <div className="bg-white text-[#16191f] h-screen flex flex-col overflow-hidden">
-      <NavHeader />
-
       <main className="flex-grow flex flex-col relative">
         {/* 预览区域 */}
         <div className="flex-grow relative">

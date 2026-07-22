@@ -1,11 +1,46 @@
 import { NextRequest } from "next/server";
 import path from "path";
 import fs from "fs/promises";
-import { existsSync, readdirSync, readFileSync } from "fs";
+import { existsSync } from "fs";
 import os from "os";
 
 // 内存缓存，避免重复读取静态模板
-const htmlCache = new Map<string, string>();
+const htmlCache = new Map<string, { content: string; timestamp: number }>();
+const CACHE_TTL = 3600 * 1000; // 1小时缓存有效期
+
+// 清理过期缓存
+function cleanExpiredCache() {
+  const now = Date.now();
+  for (const [key, value] of htmlCache.entries()) {
+    if (now - value.timestamp > CACHE_TTL) {
+      htmlCache.delete(key);
+    }
+  }
+}
+
+// 扩展 globalThis 类型
+declare global {
+  var __cache_cleaner__: NodeJS.Timeout | undefined;
+}
+
+// 定期清理缓存（每10分钟）
+if (typeof globalThis !== 'undefined' && !globalThis.__cache_cleaner__) {
+  globalThis.__cache_cleaner__ = setInterval(cleanExpiredCache, 600000);
+}
+
+// 异步查找 HTML 文件
+async function findHtmlFile(dir: string): Promise<string | null> {
+  try {
+    const files = await fs.readdir(dir);
+    const indexHtml = files.find((f) => f === "index.html");
+    if (indexHtml) return indexHtml;
+
+    const htmlFile = files.find((f) => f.endsWith(".html"));
+    return htmlFile || null;
+  } catch {
+    return null;
+  }
+}
 
 export async function GET(
   request: NextRequest,
@@ -37,81 +72,69 @@ export async function GET(
   // 对于公共模板，使用缓存
   const cacheKey = `${jobId}:${outputDir}`;
   if (isPublicTemplate && htmlCache.has(cacheKey)) {
-    return new Response(htmlCache.get(cacheKey), {
-      headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
-        "X-Cache": "HIT",
-      },
-    });
+    const cached = htmlCache.get(cacheKey)!;
+    if (Date.now() - cached.timestamp < CACHE_TTL) {
+      return new Response(cached.content, {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+          "X-Cache": "HIT",
+        },
+      });
+    } else {
+      htmlCache.delete(cacheKey);
+    }
   }
 
-  // Find the main HTML file (usually index.html or the first HTML file)
-  const files = readdirSync(outputDir);
-  let htmlFile: string | undefined = files.find((f) => f === "index.html");
-
-  if (!htmlFile) {
-    htmlFile = files.find((f) => f.endsWith(".html"));
-  }
-
+  // 异步查找 HTML 文件
+  const htmlFile = await findHtmlFile(outputDir);
   if (!htmlFile) {
     return Response.json({ error: "No HTML file found" }, { status: 404 });
   }
 
   const htmlPath = path.join(outputDir, htmlFile);
-  let htmlContent = readFileSync(htmlPath, "utf-8");
+  let htmlContent: string;
 
-  // Remove any existing <base> tag to avoid conflicts
-  htmlContent = htmlContent.replace(/<base[^>]*>/gi, "");
+  try {
+    htmlContent = await fs.readFile(htmlPath, "utf-8");
+  } catch (error) {
+    return Response.json({ error: "Failed to read HTML file" }, { status: 500 });
+  }
 
-  // For preview: inject a base tag pointing to our assets route
-  // This allows relative paths like "assets/css/0.css" to resolve correctly
+  // 优化：使用更高效的字符串处理方式
   const baseTag = `<base href="/api/clone/${jobId}/preview/assets/">`;
 
-  // 优化资源加载：添加图片懒加载和异步脚本
-  // 1. 图片懒加载（只对没有 loading 属性的图片添加）
-  htmlContent = htmlContent.replace(
-    /<img(?![^>]*loading=)([^>]*?)src=/gi,
-    '<img loading="lazy" decoding="async"$1src='
-  );
+  // 只处理必要的内容，减少正则表达式操作
+  // 1. 移除现有的 base 标签
+  const baseTagRegex = /<base[^>]*>/gi;
+  if (baseTagRegex.test(htmlContent)) {
+    htmlContent = htmlContent.replace(baseTagRegex, "");
+  }
 
-  // 2. 非关键脚本异步加载（避免重复添加 defer）
-  htmlContent = htmlContent.replace(
-    /<script(?![^>]*(?:defer|async|type=["']module["']))([^>]*?)src=([^>]*?)>/gi,
-    '<script defer$1src=$2>'
-  );
+  // 2. 添加性能优化标签（最小化）
+  const optimizationTags = `${baseTag}
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="dns-prefetch" href="//fonts.googleapis.com">
+<link rel="preconnect" href="//fonts.googleapis.com">`;
 
-  // 3. 添加资源提示和性能优化
-  const optimizationTags = `
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-      /* 首屏加载优化：骨架屏 */
-      body { opacity: 0; transition: opacity 0.3s ease-in; }
-      body.loaded { opacity: 1; }
-    </style>
-    <script>
-      // 页面加载完成后显示
-      window.addEventListener('DOMContentLoaded', () => {
-        document.body.classList.add('loaded');
-      });
-    </script>
-  `;
-
-  // For resources that weren't successfully rewritten to local paths
-  // (still have absolute URLs like https://... or protocol-relative //...),
-  // they will load directly from the original server, acting as a fallback
-  if (htmlContent.match(/<head([^>]*)>/i)) {
-    htmlContent = htmlContent.replace(
-      /<head([^>]*)>/i,
-      `<head$1>\n  ${baseTag}\n  ${optimizationTags}`
-    );
+  // 3. 注入优化后的内容
+  const headMatch = htmlContent.match(/<head([^>]*)>/i);
+  if (headMatch) {
+    const headIndex = htmlContent.indexOf(headMatch[0]) + headMatch[0].length;
+    htmlContent =
+      htmlContent.slice(0, headIndex) +
+      "\n" + optimizationTags + "\n" +
+      htmlContent.slice(headIndex);
   } else {
-    htmlContent = baseTag + "\n" + optimizationTags + "\n" + htmlContent;
+    htmlContent = optimizationTags + "\n" + htmlContent;
   }
 
   // 缓存公共模板
   if (isPublicTemplate) {
-    htmlCache.set(cacheKey, htmlContent);
+    htmlCache.set(cacheKey, {
+      content: htmlContent,
+      timestamp: Date.now(),
+    });
   }
 
   return new Response(htmlContent, {
@@ -121,6 +144,7 @@ export async function GET(
         ? "public, max-age=3600, stale-while-revalidate=86400"
         : "public, max-age=300",
       "X-Cache": "MISS",
+      "Content-Length": String(Buffer.byteLength(htmlContent, "utf-8")),
     },
   });
 }

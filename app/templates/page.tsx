@@ -1,14 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 const templates = [
-  { id: 1, name: "shadcn",   previewUrl: "http://clone.nocokit.cn/api/clone/A2QJILIqWi/preview" },
-  { id: 2, name: "飞书-咨询表单", previewUrl: "http://clone.nocokit.cn/api/clone/dYBADdLRCT/preview" },
-  { id: 3, name: "飞书-客户成功", previewUrl: "http://clone.nocokit.cn/api/clone/3HrujHHZ7a/preview" },
-  { id: 4, name: "Kimi",     previewUrl: "http://clone.nocokit.cn/api/clone/8I0qfHjxiA/preview" },
+  { id: 1, name: "Shadcn",   previewUrl: "http://clone.nocokit.cn/api/clone/A2QJILIqWi/preview" },
+  { id: 2, name: "Dify",   previewUrl: "http://clone.nocokit.cn/api/clone/3qzWpHZT_s/preview" },
+  { id: 3, name: "飞书-咨询表单", previewUrl: "http://clone.nocokit.cn/api/clone/dYBADdLRCT/preview" },
+  { id: 4, name: "飞书-客户成功", previewUrl: "http://clone.nocokit.cn/api/clone/3HrujHHZ7a/preview" },
+  { id: 5, name: "Kimi",     previewUrl: "http://clone.nocokit.cn/api/clone/8I0qfHjxiA/preview" },
 ];
+
+const LOADING_TEXT =
+  "为了保持相同的效果，所有模版资源不做任何优化，HTTP服务器请求资源并发限制导致请求时间较久，请耐心等待，也可以自行测试";
+
+function TypingText({ text, active }: { text: string; active: boolean }) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    // 每次重新加载时重置动画
+    setCount(0);
+    if (!active) return;
+
+    let i = 0;
+    const timer = setInterval(() => {
+      i += 1;
+      setCount(i);
+      if (i >= text.length) clearInterval(timer);
+    }, 150);
+
+    return () => clearInterval(timer);
+  }, [text, active]);
+
+  return (
+    <p className="text-2xl text-slate-600 mt-3 max-w-3xl text-center leading-relaxed min-h-[4rem]">
+      {text.slice(0, count)}
+      <span className="inline-block w-1 h-7 bg-slate-600 ml-1 -mb-1 animate-pulse" />
+    </p>
+  );
+}
 
 export default function Templates() {
   const [active, setActive] = useState(templates[0]);
@@ -21,7 +51,7 @@ export default function Templates() {
         <div className="flex-grow relative">
           {/* Loading 效果 */}
           {loading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 z-10">
+            <div className="absolute inset-0 flex items-start justify-center pt-[20vh] bg-gradient-to-br from-slate-50 to-slate-100 z-10">
               <div className="flex flex-col items-center gap-4">
                 {/* 旋转圆环 */}
                 <div className="relative">
@@ -37,10 +67,8 @@ export default function Templates() {
                     <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
                   </span>
                 </div>
-                <p className="text-xs text-slate-400">{active.name}</p>
-                <p className="text-[11px] text-slate-300 mt-1">
-                  💡 资源较大？试试压缩优化加载速度
-                </p>
+                <p className="text-xs text-slate-500 font-medium">{active.name}</p>
+                <TypingText text={LOADING_TEXT} active={loading} />
               </div>
             </div>
           )}

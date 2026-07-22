@@ -11,17 +11,42 @@ const templates = [
 
 export default function Templates() {
   const [active, setActive] = useState(templates[0]);
+  const [loading, setLoading] = useState(true);
 
   return (
     <div className="bg-white text-[#16191f] h-screen flex flex-col overflow-hidden">
       <main className="flex-grow flex flex-col relative">
         {/* 预览区域 */}
         <div className="flex-grow relative">
+          {/* Loading 效果 */}
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 z-10">
+              <div className="flex flex-col items-center gap-4">
+                {/* 旋转圆环 */}
+                <div className="relative">
+                  <div className="w-16 h-16 border-4 border-slate-200 rounded-full"></div>
+                  <div className="w-16 h-16 border-4 border-slate-900 rounded-full border-t-transparent animate-spin absolute top-0 left-0"></div>
+                </div>
+                {/* 加载文字 */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-slate-600">加载中</span>
+                  <span className="flex gap-1">
+                    <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                    <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                    <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400">{active.name}</p>
+              </div>
+            </div>
+          )}
+
           <iframe
             key={active.id}
             src={active.previewUrl}
             className="w-full h-full absolute inset-0 border-0"
             title={active.name}
+            onLoad={() => setLoading(false)}
           />
         </div>
 
@@ -31,7 +56,10 @@ export default function Templates() {
             {templates.map((t) => (
               <button
                 key={t.id}
-                onClick={() => setActive(t)}
+                onClick={() => {
+                  setActive(t);
+                  setLoading(true);
+                }}
                 className={`px-4 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors ${
                   active.id === t.id
                     ? "bg-slate-900 text-white"

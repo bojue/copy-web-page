@@ -8,6 +8,41 @@ import os from "os";
 const htmlCache = new Map<string, { content: string; timestamp: number }>();
 const CACHE_TTL = 3600 * 1000; // 1小时缓存有效期
 
+// 打字提示浮层（不带旋转 loading，仅逐字打印，页面加载完成后自动淡出）
+const LOADING_HINT_TEXT =
+  "为了保持相同的效果，所有模版资源不做任何优化，HTTP服务器请求资源并发限制导致请求时间较久，请耐心等待，也可以自行测试";
+
+const typingOverlay = `<style id="__preview_hint_style__">
+#__preview_hint__{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:flex-start;justify-content:center;padding:20vh 1.5rem 0;background:linear-gradient(to bottom right,#f8fafc,#f1f5f9);transition:opacity .4s ease;font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+#__preview_hint__ .ph-text{font-size:1.5rem;line-height:1.9;color:#475569;text-align:center;max-width:48rem;margin:0;min-height:4rem}
+#__preview_hint__ .ph-cursor{display:inline-block;width:.25rem;height:1.75rem;background:#475569;margin-left:.25rem;vertical-align:-0.25rem;animation:ph-blink 1s step-end infinite}
+@keyframes ph-blink{50%{opacity:0}}
+</style>
+<script id="__preview_hint_script__">
+(function(){
+  var TEXT=${JSON.stringify(LOADING_HINT_TEXT)};
+  var el=document.createElement("div");
+  el.id="__preview_hint__";
+  el.innerHTML='<p class="ph-text"><span class="ph-typed"></span><span class="ph-cursor"></span></p>';
+  (document.body||document.documentElement).appendChild(el);
+  var typed=el.querySelector(".ph-typed");
+  var i=0;
+  var timer=setInterval(function(){
+    i++;
+    typed.textContent=TEXT.slice(0,i);
+    if(i>=TEXT.length){clearInterval(timer);}
+  },150);
+  function done(){
+    if(!el)return;
+    clearInterval(timer);
+    el.style.opacity="0";
+    setTimeout(function(){if(el){el.remove();el=null;}},400);
+  }
+  if(document.readyState==="complete"){setTimeout(done,300);}
+  else{window.addEventListener("load",function(){setTimeout(done,300);});}
+})();
+</script>`;
+
 // 清理过期缓存
 function cleanExpiredCache() {
   const now = Date.now();
@@ -111,11 +146,12 @@ export async function GET(
     htmlContent = htmlContent.replace(baseTagRegex, "");
   }
 
-  // 2. 添加性能优化标签（最小化）
+  // 2. 添加性能优化标签（最小化）+ 打字提示浮层
   const optimizationTags = `${baseTag}
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="dns-prefetch" href="//fonts.googleapis.com">
-<link rel="preconnect" href="//fonts.googleapis.com">`;
+<link rel="preconnect" href="//fonts.googleapis.com">
+${typingOverlay}`;
 
   // 3. 注入优化后的内容
   const headMatch = htmlContent.match(/<head([^>]*)>/i);

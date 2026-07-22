@@ -5,7 +5,7 @@ import Link from "next/link";
 
 const templates = [
   { id: 1, name: "shadcn",   previewUrl: "http://clone.nocokit.cn/api/clone/A2QJILIqWi/preview" },
-  { id: 2, name: "飞书",     previewUrl: "http://clone.nocokit.cn/api/clone/dYBADdLRCT/preview" },
+  { id: 2, name: "飞书-咨询表单", previewUrl: "http://clone.nocokit.cn/api/clone/dYBADdLRCT/preview" },
   { id: 3, name: "飞书-客户成功", previewUrl: "http://clone.nocokit.cn/api/clone/3HrujHHZ7a/preview" },
   { id: 4, name: "Kimi",     previewUrl: "http://clone.nocokit.cn/api/clone/8I0qfHjxiA/preview" },
 ];

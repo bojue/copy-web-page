@@ -38,6 +38,9 @@ export default function Templates() {
                   </span>
                 </div>
                 <p className="text-xs text-slate-400">{active.name}</p>
+                <p className="text-[11px] text-slate-300 mt-1">
+                  💡 资源较大？试试压缩优化加载速度
+                </p>
               </div>
             </div>
           )}

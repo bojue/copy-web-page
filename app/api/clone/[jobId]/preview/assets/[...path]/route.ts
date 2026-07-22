@@ -73,6 +73,7 @@ export async function GET(
       "Content-Type": mimeType,
       "Cache-Control": "public, max-age=31536000, immutable",
       "X-Content-Type-Options": "nosniff",
+      "Access-Control-Allow-Origin": "*",
     },
   });
 }

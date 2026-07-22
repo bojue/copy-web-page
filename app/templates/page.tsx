@@ -4,8 +4,9 @@ import { useState } from "react";
 import NavHeader from "../components/NavHeader";
 
 const templates = [
-  { id: 1, name: "Mintlify", previewUrl: "http://clone.nocokit.cn/api/clone/Cm_4FQOKoc/preview" },
-  { id: 2, name: "Kimi",     previewUrl: "http://clone.nocokit.cn/api/clone/eS1NL30S8x/preview" },
+  { id: 1, name: "飞书",     previewUrl: "http://clone.nocokit.cn/api/clone/dYBADdLRCT/preview" },
+  { id: 2, name: "Kimi",     previewUrl: "http://clone.nocokit.cn/api/clone/8I0qfHjxiA/preview" },
+  { id: 3, name: "shadcn",   previewUrl: "http://clone.nocokit.cn/api/clone/A2QJILIqWi/preview" },
 ];
 
 export default function Templates() {

@@ -21,7 +21,7 @@ export default function NavHeader() {
           <span className="text-base font-bold text-slate-900 tracking-tight">Web Page Cloner</span>
         </div>
 
-        {/* <nav className="flex items-center gap-1">
+        <nav className="flex items-center gap-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -38,7 +38,7 @@ export default function NavHeader() {
               </Link>
             );
           })}
-        </nav> */}
+        </nav>
       </div>
 
       <div className="flex items-center gap-4">

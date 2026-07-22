@@ -23,7 +23,22 @@ export async function GET(
     }
   }
 
-  const outputDir = path.resolve(os.tmpdir(), "web-cloner", jobId, "site");
+  // 首先检查是否是公共模板（不会被清理的案例）
+  // 优先级：系统 /public/templates > 项目 public/templates > 临时目录
+  const systemPublicTemplateDir = path.resolve("/public", "templates", jobId, "site");
+  const projectPublicTemplateDir = path.resolve(process.cwd(), "public", "templates", jobId, "site");
+  const tmpOutputDir = path.resolve(os.tmpdir(), "web-cloner", jobId, "site");
+
+  let outputDir: string;
+  if (existsSync(systemPublicTemplateDir)) {
+    outputDir = systemPublicTemplateDir;
+  } else if (existsSync(projectPublicTemplateDir)) {
+    outputDir = projectPublicTemplateDir;
+  } else if (existsSync(tmpOutputDir)) {
+    outputDir = tmpOutputDir;
+  } else {
+    return Response.json({ error: "Job not found" }, { status: 404 });
+  }
 
   // Construct the full file path using path.resolve 确保绝对路径
   const fullPath = path.resolve(outputDir, ...filePath);

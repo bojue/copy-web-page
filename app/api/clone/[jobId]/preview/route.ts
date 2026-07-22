@@ -9,9 +9,21 @@ export async function GET(
   { params }: { params: Promise<{ jobId: string }> }
 ) {
   const { jobId } = await params;
-  const outputDir = path.join(os.tmpdir(), "web-cloner", jobId, "site");
 
-  if (!existsSync(outputDir)) {
+  // 首先检查是否是公共模板（不会被清理的案例）
+  // 优先级：系统 /public/templates > 项目 public/templates > 临时目录
+  const systemPublicTemplateDir = path.join("/public", "templates", jobId, "site");
+  const projectPublicTemplateDir = path.join(process.cwd(), "public", "templates", jobId, "site");
+  const tmpOutputDir = path.join(os.tmpdir(), "web-cloner", jobId, "site");
+
+  let outputDir: string;
+  if (existsSync(systemPublicTemplateDir)) {
+    outputDir = systemPublicTemplateDir;
+  } else if (existsSync(projectPublicTemplateDir)) {
+    outputDir = projectPublicTemplateDir;
+  } else if (existsSync(tmpOutputDir)) {
+    outputDir = tmpOutputDir;
+  } else {
     return Response.json({ error: "Job not found" }, { status: 404 });
   }
 

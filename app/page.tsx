@@ -195,10 +195,7 @@ export default function Home() {
     
           {/* 右侧：表单和结果区域 */}
           <div className="lg:col-span-7 bg-white p-6 md:p-8 border border-slate-200 rounded shadow-sm space-y-6">
-            <div>
-              <h3 className="text-lg font-bold text-slate-900">配置克隆任务</h3>
-              <p className="text-xs text-slate-500 mt-1">请在下方输入目标网址并设置采集策略。</p>
-            </div>
+    
 
             <CloneForm onSubmit={handleClone} isLoading={isLoading} />
             <CloneProgressDisplay

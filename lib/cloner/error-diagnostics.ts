@@ -102,9 +102,12 @@ export function diagnoseError(error: any, context?: DiagnosticContext): CloneErr
   }
 
   // 4. 检测空白页面 - 增强版
+  // 注意：只有在确实提供了 contentValidation 时才判空，
+  // 否则缺省时 (undefined || 0) < 100 恒为 true，会误吞后续所有网络/超时错误
   if (
-    context?.contentValidation?.isEmpty ||
-    (context?.contentValidation?.bodyTextLength || 0) < 100
+    context?.contentValidation != null &&
+    (context.contentValidation.isEmpty ||
+      (context.contentValidation.bodyTextLength || 0) < 100)
   ) {
     const textLength = context?.contentValidation?.bodyTextLength || 0;
     const pageType = context?.pageTypeDetection;
@@ -166,7 +169,40 @@ export function diagnoseError(error: any, context?: DiagnosticContext): CloneErr
     };
   }
 
-  // 6. 检测网络错误
+  // 6. 检测连接被重置/无法建立（常见于网络封锁、防火墙拦截）
+  if (
+    lowerMessage.includes("err_connection_reset") ||
+    lowerMessage.includes("err_connection_timed_out") ||
+    lowerMessage.includes("err_connection_closed") ||
+    lowerMessage.includes("err_connection_refused") ||
+    lowerMessage.includes("err_timed_out") ||
+    lowerMessage.includes("err_tunnel_connection_failed") ||
+    lowerMessage.includes("err_proxy_connection_failed") ||
+    lowerMessage.includes("err_name_not_resolved") ||
+    lowerMessage.includes("econnreset")
+  ) {
+    return {
+      type: "network",
+      message: errorMessage,
+      userMessage: "🚧 无法连接到目标网站（连接被重置或超时）",
+      suggestion:
+        "浏览器能解析域名，但连接在建立过程中被中断。这通常不是目标网站本身的问题，而是所在网络无法访问它。\n\n" +
+        "最常见原因：\n" +
+        "1. 网络封锁 / 防火墙拦截（例如某些地区无法直接访问维基百科、Google 等站点）\n" +
+        "2. 当前网络的出口对该站点做了阻断（连接在 TLS 握手阶段被重置）\n" +
+        "3. 代理或 VPN 配置异常\n" +
+        "4. DNS 污染导致连到了错误的地址\n\n" +
+        "排查步骤：\n" +
+        "• 先在本机浏览器直接打开该 URL，确认能否正常访问\n" +
+        "• 如果浏览器也打不开，说明是网络层被阻断，克隆同样无法完成\n" +
+        "• 确认可以访问后，换一个网络环境（如切换到能访问该站点的网络/代理）再重试\n" +
+        "• 若需通过代理访问被限制的站点，请在部署环境为服务配置代理后重试",
+      canRetry: true,
+      technicalDetails: errorMessage,
+    };
+  }
+
+  // 7. 检测网络错误
   if (
     lowerMessage.includes("net::err") ||
     lowerMessage.includes("network") ||
@@ -194,7 +230,7 @@ export function diagnoseError(error: any, context?: DiagnosticContext): CloneErr
     };
   }
 
-  // 7. 通用错误
+  // 8. 通用错误
   return {
     type: "unknown",
     message: errorMessage,

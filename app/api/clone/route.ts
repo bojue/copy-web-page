@@ -1,7 +1,7 @@
 import { CloneEngine } from "@/lib/cloner";
 import { CloneProgress, CloneOptions } from "@/lib/types";
 import { config } from "@/lib/config";
-import { wrapError } from "@/lib/errors";
+import { diagnoseError } from "@/lib/cloner/error-diagnostics";
 import { globalCloneQueue } from "@/lib/job-queue";
 import { nanoid } from "nanoid";
 import { apiRateLimiter } from "@/lib/rate-limiter-api";
@@ -277,12 +277,13 @@ export async function POST(request: Request) {
           totalSize: result.totalSize,
         });
       } catch (error) {
-        const cloneError = wrapError(error);
+        // 使用详细诊断器，针对被拒/被墙/验证码等给出具体提示
+        const cloneError = diagnoseError(error, { url: options.url });
         send({
           type: "error",
           message: cloneError.userMessage,
           suggestion: cloneError.suggestion,
-          retryable: cloneError.retryable,
+          retryable: cloneError.canRetry,
         });
       } finally {
         // 释放该IP的并发槽位

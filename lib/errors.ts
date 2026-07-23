@@ -180,15 +180,21 @@ export function wrapError(error: unknown): CloneError {
   if (error instanceof Error) {
     const message = error.message.toLowerCase();
 
-    // 超时相关
-    if (message.includes("timeout") || message.includes("timed out")) {
+    // 超时相关（含 puppeteer 的 net::ERR_*TIMED_OUT 下划线形式）
+    if (
+      message.includes("timeout") ||
+      message.includes("timed out") ||
+      message.includes("timed_out")
+    ) {
       return new TimeoutError(error.message, error.stack);
     }
 
-    // 网络连接相关
+    // 网络连接相关（含 puppeteer 的 net::ERR_CONNECTION_* / 连接被重置）
     if (
       message.includes("econnrefused") ||
       message.includes("enotfound") ||
+      message.includes("econnreset") ||
+      message.includes("net::err") ||
       message.includes("network") ||
       message.includes("fetch failed")
     ) {

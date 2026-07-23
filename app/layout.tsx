@@ -11,12 +11,15 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const baiduAnalyticsId = process.env.NEXT_PUBLIC_BAIDU_ANALYTICS_ID;
+
   return (
     <html lang="zh" className="h-full antialiased">
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
+        {baiduAnalyticsId && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
 // 过滤本地访问统计
 if (typeof window !== 'undefined') {
   var hostname = window.location.hostname;
@@ -30,15 +33,16 @@ if (typeof window !== 'undefined') {
     var _hmt = _hmt || [];
     (function() {
       var hm = document.createElement("script");
-      hm.src = "https://hm.baidu.com/hm.js?8775e1dd8a18a03c5be475ff840c59ff";
+      hm.src = "https://hm.baidu.com/hm.js?${baiduAnalyticsId}";
       var s = document.getElementsByTagName("script")[0];
       s.parentNode.insertBefore(hm, s);
     })();
   }
 }
-            `,
-          }}
-        />
+              `,
+            }}
+          />
+        )}
       </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

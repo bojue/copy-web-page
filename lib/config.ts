@@ -13,13 +13,6 @@ export const config = {
     timeout: Number(process.env.DOWNLOAD_TIMEOUT) || 15000,
   },
 
-  browser: {
-    /** Puppeteer 超时时间（毫秒） */
-    timeout: Number(process.env.BROWSER_TIMEOUT) || 30000,
-    /** 页面加载等待时间（毫秒） */
-    waitForNetworkIdle: Number(process.env.WAIT_FOR_NETWORK_IDLE) || 2000,
-  },
-
   clone: {
     /** 自动清理临时文件的延迟时间（毫秒），默认1小时 */
     autoCleanupDelay: Number(process.env.AUTO_CLEANUP_DELAY) || 3600000,

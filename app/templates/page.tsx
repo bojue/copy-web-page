@@ -5,12 +5,13 @@ import Link from "next/link";
 
 const templates = [
   { id: 1, name: "Shadcn",   previewUrl: "http://clone.nocokit.cn/api/clone/A2QJILIqWi/preview" },
-  { id: 2, name: "Dify",   previewUrl: "http://clone.nocokit.cn/api/clone/3qzWpHZT_s/preview" },
-  { id: 3, name: "番茄",   previewUrl: "http://clone.nocokit.cn/api/clone/UXs_ffrhOf/preview" },
-  { id: 4, name: "火山-AI普惠季",   previewUrl: "http://clone.nocokit.cn/api/clone/hwOCpPO_A0/preview" },
-  { id: 5, name: "飞书-咨询表单", previewUrl: "http://clone.nocokit.cn/api/clone/dYBADdLRCT/preview" },
-  { id: 6, name: "飞书-客户成功", previewUrl: "http://clone.nocokit.cn/api/clone/3HrujHHZ7a/preview" },
-  { id: 7, name: "Kimi",     previewUrl: "http://clone.nocokit.cn/api/clone/8I0qfHjxiA/preview" },
+  { id: 2, name: "TARE-文档", previewUrl: "http://clone.nocokit.cn/api/clone/JGF0OxccVw/preview" },
+  { id: 3, name: "Dify",   previewUrl: "http://clone.nocokit.cn/api/clone/3qzWpHZT_s/preview" },
+  { id: 4, name: "番茄",   previewUrl: "http://clone.nocokit.cn/api/clone/UXs_ffrhOf/preview" },
+  { id: 5, name: "火山-AI普惠季",   previewUrl: "http://clone.nocokit.cn/api/clone/hwOCpPO_A0/preview" },
+  { id: 6, name: "飞书-咨询表单", previewUrl: "http://clone.nocokit.cn/api/clone/dYBADdLRCT/preview" },
+  { id: 7, name: "飞书-客户成功", previewUrl: "http://clone.nocokit.cn/api/clone/3HrujHHZ7a/preview" },
+  { id: 8, name: "Kimi",     previewUrl: "http://clone.nocokit.cn/api/clone/8I0qfHjxiA/preview" },
 ];
 
 const LOADING_TEXT =

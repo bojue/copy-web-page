@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "bash scripts/cleanup-puppeteer-profiles.sh && next dev",
+    "dev": "bash scripts/start-dev.sh",
+    "dev:fixed": "bash scripts/cleanup-puppeteer-profiles.sh && next dev",
     "build": "next build",
     "start": "bash scripts/cleanup-puppeteer-profiles.sh && next start",
     "lint": "eslint",

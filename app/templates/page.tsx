@@ -3,15 +3,23 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
-const templates = [
-  { id: 1, name: "Shadcn",   previewUrl: "http://clone.nocokit.cn/api/clone/A2QJILIqWi/preview" },
-  { id: 2, name: "TARE-文档", previewUrl: "http://clone.nocokit.cn/api/clone/JGF0OxccVw/preview" },
-  { id: 3, name: "Dify",   previewUrl: "http://clone.nocokit.cn/api/clone/3qzWpHZT_s/preview" },
-  { id: 4, name: "番茄",   previewUrl: "http://clone.nocokit.cn/api/clone/UXs_ffrhOf/preview" },
-  { id: 5, name: "火山-AI普惠季",   previewUrl: "http://clone.nocokit.cn/api/clone/hwOCpPO_A0/preview" },
-  { id: 6, name: "飞书-咨询表单", previewUrl: "http://clone.nocokit.cn/api/clone/dYBADdLRCT/preview" },
-  { id: 7, name: "飞书-客户成功", previewUrl: "http://clone.nocokit.cn/api/clone/3HrujHHZ7a/preview" },
-  { id: 8, name: "Kimi",     previewUrl: "http://clone.nocokit.cn/api/clone/8I0qfHjxiA/preview" },
+type Category = "docs" | "landing" | "form";
+
+const categories: { id: Category; label: string }[] = [
+  { id: "landing", label: "落地页" },
+  { id: "docs", label: "文档" },
+  { id: "form", label: "表单" },
+];
+
+const templates: { id: number; name: string; category: Category; previewUrl: string }[] = [
+  { id: 1, name: "Shadcn",       category: "docs",    previewUrl: "http://clone.nocokit.cn/api/clone/A2QJILIqWi/preview" },
+  { id: 2, name: "TARE-文档",     category: "docs",    previewUrl: "http://clone.nocokit.cn/api/clone/JGF0OxccVw/preview" },
+  { id: 3, name: "Dify",         category: "landing", previewUrl: "http://clone.nocokit.cn/api/clone/3qzWpHZT_s/preview" },
+  { id: 4, name: "番茄",          category: "landing", previewUrl: "http://clone.nocokit.cn/api/clone/UXs_ffrhOf/preview" },
+  { id: 5, name: "火山-AI普惠季",  category: "landing", previewUrl: "http://clone.nocokit.cn/api/clone/hwOCpPO_A0/preview" },
+  { id: 6, name: "飞书-咨询表单",  category: "form",    previewUrl: "http://clone.nocokit.cn/api/clone/dYBADdLRCT/preview" },
+  { id: 7, name: "飞书-客户成功",  category: "landing", previewUrl: "http://clone.nocokit.cn/api/clone/3HrujHHZ7a/preview" },
+  { id: 8, name: "Kimi",         category: "landing", previewUrl: "http://clone.nocokit.cn/api/clone/8I0qfHjxiA/preview" },
 ];
 
 const LOADING_TEXT =
@@ -44,8 +52,11 @@ function TypingText({ text, active }: { text: string; active: boolean }) {
 }
 
 export default function Templates() {
+  const [category, setCategory] = useState<Category>(categories[0].id);
   const [active, setActive] = useState(templates[0]);
   const [loading, setLoading] = useState(true);
+
+  const visibleTemplates = templates.filter((t) => t.category === category);
 
   return (
     <div className="bg-white text-[#16191f] h-screen flex flex-col overflow-hidden">
@@ -85,10 +96,37 @@ export default function Templates() {
           />
         </div>
 
-        {/* 底部居中模版切换 */}
+        {/* 底部居中导航条 */}
         <div className="absolute bottom-6 left-0 right-0 flex justify-center pointer-events-none z-10">
-          <div className="pointer-events-auto flex items-center gap-1 bg-white/90 backdrop-blur-sm border border-slate-200 rounded-full px-2 py-1.5 shadow-md">
-            {templates.map((t) => (
+          <div className="pointer-events-auto flex items-center gap-1 bg-white/90 backdrop-blur-sm border border-slate-200 rounded-full pl-1.5 pr-2 py-1.5 shadow-md">
+            {/* 分类段控件 */}
+            <div className="flex items-center gap-0.5 bg-slate-100 rounded-full p-0.5">
+              {categories.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => {
+                    const first = templates.find((t) => t.category === c.id);
+                    setCategory(c.id);
+                    if (first) {
+                      setActive(first);
+                      setLoading(true);
+                    }
+                  }}
+                  className={`px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap transition-colors ${
+                    category === c.id
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-slate-500 hover:text-slate-900"
+                  }`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="w-px h-5 bg-slate-200 mx-1" />
+
+            {/* 模版切换 */}
+            {visibleTemplates.map((t) => (
               <button
                 key={t.id}
                 onClick={() => {
@@ -109,7 +147,7 @@ export default function Templates() {
             <div className="w-px h-5 bg-slate-200 mx-1" />
             <Link
               href="/"
-              className="px-4 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1"
+              className="px-3.5 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
@@ -119,12 +157,6 @@ export default function Templates() {
           </div>
         </div>
       </main>
-
-      <footer className="w-full text-center py-4 border-t border-slate-200 bg-white flex-shrink-0">
-        <p className="text-[11px] text-slate-500">
-          Web Page Cloner · 开源轻量级工具 · 仅供技术研究与授权测试使用
-        </p>
-      </footer>
     </div>
   );
 }

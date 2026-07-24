@@ -195,7 +195,16 @@ export default function Home() {
     
           {/* 右侧：表单和结果区域 */}
           <div className="lg:col-span-7 bg-white p-6 md:p-8 border border-slate-200 rounded shadow-sm space-y-6">
-    
+
+            {/* 部署环境提示 */}
+            <div className="flex gap-2.5 rounded border border-amber-200 bg-amber-50 px-3.5 py-3">
+              <svg className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
+              <p className="text-xs leading-relaxed text-amber-800">
+                在线环境部署于境内,仅供在线体验测试。克隆境外站点资源可能受网络限制,建议本地运行或自行部署使用。
+              </p>
+            </div>
 
             <CloneForm onSubmit={handleClone} isLoading={isLoading} />
             <CloneProgressDisplay

@@ -53,7 +53,9 @@ function TypingText({ text, active }: { text: string; active: boolean }) {
 
 export default function Templates() {
   const [category, setCategory] = useState<Category>(categories[0].id);
-  const [active, setActive] = useState(templates[0]);
+  const [active, setActive] = useState<Template>(
+    templates.find((t) => t.category === categories[0].id) ?? templates[0]
+  );
   const [loading, setLoading] = useState(true);
 
   const visibleTemplates = templates.filter((t) => t.category === category);

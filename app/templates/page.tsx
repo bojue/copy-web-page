@@ -11,7 +11,9 @@ const categories: { id: Category; label: string }[] = [
   { id: "form", label: "表单" },
 ];
 
-const templates: { id: number; name: string; category: Category; previewUrl: string }[] = [
+type Template = { id: number; name: string; category: Category; previewUrl: string };
+
+const templates: Template[] = [
   { id: 1, name: "Shadcn",       category: "docs",    previewUrl: "http://clone.nocokit.cn/api/clone/A2QJILIqWi/preview" },
   { id: 2, name: "TARE-文档",     category: "docs",    previewUrl: "http://clone.nocokit.cn/api/clone/JGF0OxccVw/preview" },
   { id: 3, name: "Dify",         category: "landing", previewUrl: "http://clone.nocokit.cn/api/clone/3qzWpHZT_s/preview" },
